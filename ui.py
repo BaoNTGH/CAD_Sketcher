@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel, Menu, UIList
 from . import functions, class_defines
-from .declarations import Menus, Operators, Panels
+from .declarations import Menus, Operators, Panels, SketchCoversionTypes, SolverStateTypes
 from .operators import constraint_operators
 
 
@@ -27,7 +27,7 @@ class VIEW3D_UL_sketches(UIList):
                 row = layout.row()
                 row.alignment = "RIGHT"
 
-                if item.solver_state != "OKAY":
+                if item.solver_state != SolverStateTypes.Ok:
                     row.operator(
                         Operators.ShowSolverState,
                         text="",
@@ -82,7 +82,7 @@ class VIEW3D_PT_sketcher(Panel):
             row.alignment = "CENTER"
             row.scale_y = 1.2
 
-            if sketch.solver_state != "OKAY":
+            if sketch.solver_state != SolverStateTypes.Ok:
                 state = sketch.get_solver_state()
                 row.operator(
                     Operators.ShowSolverState,
@@ -102,7 +102,7 @@ class VIEW3D_PT_sketcher(Panel):
             row = layout.row()
             row.prop(sketch, "name")
             layout.prop(sketch, "convert_type")
-            if sketch.convert_type != "NONE":
+            if sketch.convert_type != SketchCoversionTypes.Nothing:
                 layout.prop(sketch, "fill_shape")
 
             layout.operator(

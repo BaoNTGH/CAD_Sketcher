@@ -2,6 +2,11 @@
 
 from enum import  Enum
 
+class AlignmentTypes(str, Enum):
+    Nothing = "NONE"
+    Horizontal = "HORIZONTAL"
+    Vertical = "VERTICAL"
+
 class Gizmos(str, Enum):
     Angle = "VIEW3D_GT_slvs_angle"
     Constraint = "VIEW3D_GT_slvs_constraint"
@@ -63,10 +68,36 @@ class Operators(str, Enum):
     UnregisterDrawCB = "view3d.slvs_unregister_draw_cb"
     WriteSelectionTexture = "view3d.slvs_write_selection_texture"
 
+class OperatorTypes(str, Enum):
+    Angle = "ANGLE"
+    Coincident = "COINCIDENT"
+    Diameter = "DIAMETER"
+    Distance = "DISTANCE"
+    Equal = "EQUAL"
+    Horizontal = "HORIZONTAL"
+    MidPoint = "MIDPOINT"
+    Parallel = "PARALLEL"
+    Perpendicular = "PERPENDICULAR"
+    Ratio = "RATIO"
+    Tangent = "TANGENT"
+    Vertical = "VERTICAL"
+
 class Panels(str, Enum):
     Sketcher = "VIEW3D_PT_sketcher"
     SketcherContraints = "VIEW3D_PT_sketcher_constraints"
     SketcherEntities = "VIEW3D_PT_sketcher_entities"
+
+class SketchCoversionTypes(str, Enum):
+    Nothing = "NONE"
+    Bezier = "BEZIER"
+    Mesh = "MESH"
+
+class SolverStateTypes(str, Enum):
+    Ok = "OKAY"
+    Inconsistent = "INCONSISTENT"
+    DidNotConverge = "DIDNT_CONVERGE"
+    TooManyUnknowns = "TOO_MANY_UNKNOWNS"
+    UnknownFailure = "UNKNOWN_FAILURE"
 
 class WorkSpaceTools(str, Enum):
     AddArc2D = "sketcher.slvs_add_arc2d"

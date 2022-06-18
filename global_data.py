@@ -1,6 +1,7 @@
 import sys
 from enum import Enum
 from mathutils import Vector
+from .declarations import SolverStateTypes
 
 registered = False
 
@@ -33,30 +34,36 @@ class WpReq(Enum):
 
 
 solver_state_items = [
-    ("OKAY", "Okay", "Successfully solved sketch", "CHECKMARK", 0),
     (
-        "INCONSISTENT",
+        SolverStateTypes.Ok,
+        "Okay",
+        "Successfully solved sketch",
+        "CHECKMARK",
+        0,
+    ),
+    (
+        SolverStateTypes.Inconsistent,
         "Inconsistent",
         "Cannot solve sketch because of inconsistent constraints",
         "ERROR",
         1,
     ),
     (
-        "DIDNT_CONVERGE",
+        SolverStateTypes.DidNotConverge,
         "Didnt Converge",
         "Cannot solve sketch, system didn't converge",
         "ERROR",
         2,
     ),
     (
-        "TOO_MANY_UNKNOWNS",
+        SolverStateTypes.TooManyUnknowns,
         "Too Many Unknowns",
         "Cannot solve sketch because of too many unknowns",
         "ERROR",
         3,
     ),
     (
-        "UNKNOWN_FAILURE",
+        SolverStateTypes.UnknownFailure,
         "Unknown Failure",
         "Cannot solve sketch because of unknown failure",
         "ERROR",

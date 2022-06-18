@@ -1,5 +1,9 @@
-import bpy
-import logging
+import bgl, bpy, gpu, logging, math
+
+from . import functions, global_data, preferences
+from .declarations import AlignmentTypes, SketchCoversionTypes
+from .shaders import Shaders
+from .solver import solve_system, Solver
 from bpy.types import PropertyGroup
 from bpy.props import (
     CollectionProperty,
@@ -11,21 +15,11 @@ from bpy.props import (
     EnumProperty,
     StringProperty,
 )
-
-from . import functions, preferences
-import gpu, bgl
-from gpu_extras.batch import batch_for_shader
-from . import global_data
-
 from bpy_extras.view3d_utils import location_3d_to_region_2d
-import math, mathutils
-
-from .shaders import Shaders
-from .solver import solve_system, Solver
-from .functions import unique_attribute_setter
+from gpu_extras.batch import batch_for_shader
+from mathutils import Vector, Matrix, geometry
 
 logger = logging.getLogger(__name__)
-
 
 def entity_name_getter(self):
     return self.get("name", str(self))
@@ -508,10 +502,8 @@ class SlvsNormal3D(Normal3D, PropertyGroup):
 
 def get_face_orientation(mesh, face):
     # returns quaternion describing the face orientation in objectspace
-    normal = mathutils.geometry.normal([mesh.vertices[i].co for i in face.vertices])
+    normal = geometry.normal([mesh.vertices[i].co for i in face.vertices])
     return normal.to_track_quat("Z", "X")
-
-from mathutils import Vector, Matrix
 
 def mean(lst):
     n = len(lst)
@@ -626,15 +618,9 @@ class SlvsWorkplane(SlvsGenericEntity, PropertyGroup):
 slvs_entity_pointer(SlvsWorkplane, "p1")
 slvs_entity_pointer(SlvsWorkplane, "nm")
 
-convert_items = [
-    ("NONE", "None", "", 1),
-    ("BEZIER", "Bezier", "", 2),
-    ("MESH", "Mesh", "", 3),
-]
-
 
 def hide_sketch(self, context):
-    if self.convert_type != "NONE":
+    if self.convert_type != SketchCoversionTypes.Nothing:
         self.visible = False
 
 
@@ -652,7 +638,11 @@ class SlvsSketch(SlvsGenericEntity, PropertyGroup):
 
     convert_type: EnumProperty(
         name="Convert Type",
-        items=convert_items,
+        items=[
+            (SketchCoversionTypes.Nothing, "None", "", 1),
+            (SketchCoversionTypes.Bezier, "Bezier", "", 2),
+            (SketchCoversionTypes.Mesh, "Mesh", "", 3),
+        ],
         description="Define how the sketch should be converted in order to be usable in native blender",
         update=hide_sketch,
     )
@@ -716,7 +706,7 @@ class SlvsSketch(SlvsGenericEntity, PropertyGroup):
 
 
 slvs_entity_pointer(SlvsSketch, "wp")
-SlvsSketch.__setattr__ = unique_attribute_setter
+SlvsSketch.__setattr__ = functions.unique_attribute_setter
 
 
 class Entity2D:
@@ -2175,12 +2165,6 @@ def get_distance_value(self):
 def set_distance_value(self, value):
     self['value'] = abs(value)
 
-align_items = [
-    ("NONE", "None", "", 0),
-    ("HORIZONTAL", "Horizontal", "", 1),
-    ("VERTICAL", "Vertical", "", 2),
-]
-
 class SlvsDistance(GenericConstraint, PropertyGroup):
     """Sets the distance between a point and some other entity (point/line/Workplane).
     """
@@ -2195,7 +2179,15 @@ class SlvsDistance(GenericConstraint, PropertyGroup):
     )
     flip: BoolProperty(name="Flip", update=update_system_cb)
     draw_offset: FloatProperty(name="Draw Offset", default=0.3)
-    align: EnumProperty(name="Align", items=align_items, update=update_system_cb,)
+    align: EnumProperty(
+        name="Align",
+        items=[
+            (AlignmentTypes.Nothing, "None", "", 0),
+            (AlignmentTypes.Horizontal, "Horizontal", "", 1),
+            (AlignmentTypes.Vertical, "Vertical", "", 2),
+        ],
+        update=update_system_cb,
+    )
     type = "DISTANCE"
     signature = (point, (*point, *line, SlvsWorkplane))
 
@@ -2236,7 +2228,7 @@ class SlvsDistance(GenericConstraint, PropertyGroup):
         func = None
         set_wp = False
         alignment = self.align
-        align = self.use_align() and alignment != "NONE"
+        align = self.use_align() and alignment != AlignmentTypes.Nothing
         handles = []
 
         value = self.get_value()
@@ -2284,12 +2276,12 @@ class SlvsDistance(GenericConstraint, PropertyGroup):
         sketch = self.sketch
         x_axis = Vector((1, 0))
         alignment = self.align
-        align = alignment != "NONE"
+        align = alignment != AlignmentTypes.Nothing
 
         if type(self.entity2) in point_2d:
             p1, p2 = self.entity1.co, self.entity2.co
             if align:
-                v_rotation = Vector((1.0, 0.0)) if alignment == "HORIZONTAL" else Vector((0.0, 1.0))
+                v_rotation = Vector((1.0, 0.0)) if alignment == AlignmentTypes.Horizontal else Vector((0.0, 1.0))
             else:
                 v_rotation = p2 - p1
             v_translation = (p2 + p1) / 2

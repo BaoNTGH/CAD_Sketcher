@@ -3,7 +3,7 @@ import bpy, bgl, gpu
 from bpy.types import Operator
 from . import global_data, functions, class_defines, convertors
 from .keymaps import get_key_map_desc
-from .declarations import Operators, GizmoGroups, WorkSpaceTools
+from .declarations import Operators, OperatorTypes, GizmoGroups, SketchCoversionTypes, WorkSpaceTools
 
 from bpy.props import (
     IntProperty,
@@ -3325,7 +3325,7 @@ class VIEW3D_OT_slvs_add_distance(
         name="Distance", subtype="DISTANCE", unit="LENGTH", min=0.0, options={"SKIP_SAVE"}
     )
     align: EnumProperty(name="Alignment", items=class_defines.align_items)
-    type = "DISTANCE"
+    type = OperatorTypes.Distance
 
     def fini(self, context, succeede):
         super().fini(context, succeede)
@@ -3355,7 +3355,7 @@ class VIEW3D_OT_slvs_add_angle(
         name="Angle", subtype="ANGLE", unit="ROTATION", options={"SKIP_SAVE"}
     )
     setting: BoolProperty(name="Invert")
-    type = "ANGLE"
+    type = OperatorTypes.Angle
 
     def fini(self, context, succeede):
         super().fini(context, succeede)
@@ -3375,7 +3375,7 @@ class VIEW3D_OT_slvs_add_diameter(
     )
 
     setting: BoolProperty(name="Use Radius")
-    type = "DIAMETER"
+    type = OperatorTypes.Diameter
 
 
 # Geomteric constraints
@@ -3386,7 +3386,7 @@ class VIEW3D_OT_slvs_add_coincident(
     bl_label = "Coincident"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "COINCIDENT"
+    type = OperatorTypes.Coincident
 
     def main(self, context):
         p1, p2 = self.entity1, self.entity2
@@ -3405,7 +3405,7 @@ class VIEW3D_OT_slvs_add_equal(
     bl_label = "Equal"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "EQUAL"
+    type = OperatorTypes.Equal
 
 
 class VIEW3D_OT_slvs_add_vertical(
@@ -3415,7 +3415,7 @@ class VIEW3D_OT_slvs_add_vertical(
     bl_label = "Vertical"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "VERTICAL"
+    type = OperatorTypes.Vertical
 
 
 class VIEW3D_OT_slvs_add_horizontal(
@@ -3425,7 +3425,7 @@ class VIEW3D_OT_slvs_add_horizontal(
     bl_label = "Horizontal"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "HORIZONTAL"
+    type = OperatorTypes.Horizontal
 
 
 class VIEW3D_OT_slvs_add_parallel(
@@ -3435,7 +3435,7 @@ class VIEW3D_OT_slvs_add_parallel(
     bl_label = "Parallel"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "PARALLEL"
+    type = OperatorTypes.Parallel
 
 
 class VIEW3D_OT_slvs_add_perpendicular(
@@ -3445,7 +3445,7 @@ class VIEW3D_OT_slvs_add_perpendicular(
     bl_label = "Perpendicular"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "PERPENDICULAR"
+    type = OperatorTypes.Perpendicular
 
 
 class VIEW3D_OT_slvs_add_tangent(
@@ -3455,7 +3455,7 @@ class VIEW3D_OT_slvs_add_tangent(
     bl_label = "Tangent"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "TANGENT"
+    type = OperatorTypes.Tangent
 
 
 class VIEW3D_OT_slvs_add_midpoint(
@@ -3465,7 +3465,7 @@ class VIEW3D_OT_slvs_add_midpoint(
     bl_label = "Midpoint"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "MIDPOINT"
+    type = OperatorTypes.MidPoint
 
 
 class VIEW3D_OT_slvs_add_ratio(
@@ -3479,7 +3479,7 @@ class VIEW3D_OT_slvs_add_ratio(
     bl_label = "Ratio"
     bl_options = {"UNDO", "REGISTER"}
 
-    type = "RATIO"
+    type = OperatorTypes.Ratio
 
 
 class View3D_OT_slvs_set_all_constraints_visibility(Operator, HighlightElement):
@@ -3660,7 +3660,7 @@ def _cleanup_data(sketch, mode):
         sketch.target_object.sketch_index = -1
         bpy.data.objects.remove(sketch.target_object, do_unlink=True)
         sketch.target_object = None
-    if sketch.target_curve_object and mode != "BEZIER":
+    if sketch.target_curve_object and mode != SketchCoversionTypes.Bezier:
         sketch.target_curve_object.sketch_index = -1
         bpy.data.objects.remove(sketch.target_curve_object, do_unlink=True)
         sketch.target_curve_object = None
@@ -3679,7 +3679,7 @@ def update_convertor_geometry(scene, sketch=None):
     coll = (sketch,) if sketch else scene.sketcher.entities.sketches
     for sketch in coll:
         mode = sketch.convert_type
-        if sketch.convert_type == "NONE":
+        if sketch.convert_type == SketchCoversionTypes.Nothing:
             _cleanup_data(sketch, mode)
             continue
 
@@ -3706,7 +3706,7 @@ def update_convertor_geometry(scene, sketch=None):
         data = curve_data
 
         # Link / unlink curve object
-        _link_unlink_object(scene, sketch.target_curve_object, mode == "BEZIER")
+        _link_unlink_object(scene, sketch.target_curve_object, mode == SketchCoversionTypes.Bezier)
 
         if mode == "MESH":
             # Create mesh data

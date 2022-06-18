@@ -1,6 +1,6 @@
 import bpy
 
-from .declarations import Operators, WorkSpaceTools
+from .declarations import AlignmentTypes, Operators, WorkSpaceTools
 
 def tool_invoke_kmi(button, tool, operator):
     return (
@@ -9,7 +9,7 @@ def tool_invoke_kmi(button, tool, operator):
         {"properties": [("tool_name", tool), ("operator", operator)]},
     )
 
-constraint_access = (
+constraint_key_maps = (
     (
         Operators.AddCoincident,
         {"type": "C", "value": "PRESS", "shift": True},
@@ -65,12 +65,12 @@ constraint_access = (
     (
         Operators.AddDistance,
         {"type": "V", "value": "PRESS", "alt": True},
-        {"properties": [("wait_for_input", True), ("align", "VERTICAL")]}
+        {"properties": [("wait_for_input", True), ("align", AlignmentTypes.Vertical)]}
     ),
     (
         Operators.AddDistance,
         {"type": "H", "value": "PRESS", "alt": True},
-        {"properties": [("wait_for_input", True), ("align", "HORIZONTAL")]}
+        {"properties": [("wait_for_input", True), ("align", AlignmentTypes.Horizontal)]}
     ),
     (
         Operators.AddAngle,
@@ -125,7 +125,7 @@ tool_access = (
         {"type": "S", "value": "PRESS"},
         {"properties": [("wait_for_input", True), ]}
     ),
-    *constraint_access,
+    *constraint_key_maps,
 )
 
 addon_keymaps = []
