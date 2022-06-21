@@ -2697,6 +2697,96 @@ class Intersection:
         return "Intersection {}, {}, {}".format(self.index, self.co, self.element)
 
 
+class View3D_OT_slvs_chamfer(Operator, Operator2d):
+    bl_idname = Operators.Chamfer
+    bl_label = "Chamfer"
+    bl_options = {"REGISTER", "UNDO"}
+
+    radius: FloatProperty(name="Radius")
+
+    states = (
+        state_from_args(
+            "Chamfer", #trim_state1_doc[0],
+            description="Chamfer", #description=trim_state1_doc[1],
+            pointer="segment",
+            types=class_defines.segment,
+            #pick_element="pick_element_coords",
+            use_create=False,
+            # interactive=True
+        ),
+    )
+
+    __doc__ = stateful_op_desc(
+        "Trim segment to it's closest intersections.",
+        #state_desc(*trim_state1_doc, (class_defines.SlvsPoint2D, )),
+        state_desc(*["Chamfer", "Chamfer"], (class_defines.SlvsPoint2D, )),
+    )
+
+    def main(self, context):
+        return True
+
+    def fini(self, context, succeede):
+        if not succeede:
+            return False
+
+        selected_indices = global_data.selected
+        selected_entities = []
+        sketch = context.scene.sketcher.active_sketch
+        for e in sketch.sketch_entities(context):
+            if e.slvs_index in selected_indices:
+                selected_entities.append(e)
+        
+        distance = 4
+
+        point1 = get_a_point_one_line(selected_entities[0].p1.co, selected_entities[0].p2.co, distance)
+
+        def get_a_point_one_line(p1, p2, d):
+            m = (p2.y - p1.y)/(p2.x - p1.x)
+            i = p1.y - m*p1.x
+            a = 1 + m*m
+            b = 2*(m*i - p1.x- m*p1.y)
+            c = d*d - p1.x*p1.x - p1.y*p1.y + 2*i*p1.y
+            x = -b + math.sqrt(b*b - 4*c*c)/(2*a)
+            y = m*x + i
+            return (x, y)
+        
+
+        # segment = self.segment
+
+        # mouse_pos = self._state_data[0].get("mouse_pos")
+        # if mouse_pos == None:
+        #     return False
+
+        # trim = TrimSegment(segment, mouse_pos)
+
+        # # Find intersections
+        # for e in sketch.sketch_entities(context):
+        #     if not type(e) in class_defines.segment:
+        #         continue
+        #     if e == segment:
+        #         continue
+
+        #     for co in segment.intersect(e):
+        #         #print("intersect", co)
+        #         trim.add(e, co)
+
+        # # Find points that are connected to the segment through a conincident constraint
+        # for c in (*context.scene.sketcher.constraints.coincident, *context.scene.sketcher.constraints.midpoint):
+        #     ents = c.entities()
+        #     if segment not in ents:
+        #         continue
+        #     p = ents[0]
+        #     trim.add(c, p.co)
+
+        # # TODO: Get rid of the coincident constraint as it will be a shared connection point
+
+        # if not trim.check():
+        #     return
+
+        # trim.replace(context)
+        # functions.refresh(context)
+
+
 class TrimSegment:
     """Holds data of a segment to be trimmed"""
     def __init__(self, segment, pos):
@@ -3791,6 +3881,7 @@ classes = (
     View3D_OT_slvs_add_circle2d,
     View3D_OT_slvs_add_arc2d,
     View3D_OT_slvs_add_rectangle,
+    View3D_OT_slvs_chamfer,
     View3D_OT_slvs_trim,
     View3D_OT_slvs_test,
     View3D_OT_invoke_tool,

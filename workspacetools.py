@@ -228,6 +228,20 @@ class View3D_T_slvs_add_rectangle(GenericStateTool, WorkSpaceTool):
         *operator_access(Operators.AddRectangle),
     )
 
+class View3D_T_slvs_chamfer(GenericStateTool, WorkSpaceTool):
+    bl_space_type = "VIEW_3D"
+    bl_context_mode = "OBJECT"
+    bl_idname = WorkSpaceTools.Chamfer
+    bl_label = GenericStateTool.get_label(WorkSpaceTools.Chamfer, "Chamfer")
+    bl_operator = Operators.Chamfer
+    bl_icon = "ops.gpencil.stroke_cutter"
+    bl_widget = GizmoGroups.Preselection
+    bl_keymap = (
+        *tool_keymap,
+        *tool_access,
+        *operator_access(Operators.Chamfer),
+    )
+
 class View3D_T_slvs_trim(GenericStateTool, WorkSpaceTool):
     bl_space_type = "VIEW_3D"
     bl_context_mode = "OBJECT"
@@ -290,6 +304,7 @@ tools = (
     (View3D_T_slvs_add_circle2d, {"separator": False, "group": False}),
     (View3D_T_slvs_add_arc2d, {"separator": False, "group": False}),
     (View3D_T_slvs_add_rectangle, {"separator": False, "group": False}),
+    (View3D_T_slvs_chamfer, {"separator": False, "group": False}),
     (View3D_T_slvs_trim, {"separator": False, "group": False}),
     (View3D_T_slvs_add_workplane_face, {"separator": True, "group": True}),
     (View3D_T_slvs_add_workplane, {"after": {View3D_T_slvs_add_workplane_face.bl_idname}}),
